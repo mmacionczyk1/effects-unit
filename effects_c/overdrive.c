@@ -1,0 +1,58 @@
+#include "overdrive.h"
+
+typedef struct {
+    float b0, b1, b2;
+    float a1, a2;
+    float s1;
+    float s2;
+} biquad_t;
+
+static biquad_t bq =  // butter lp 8k
+{
+    0.1551451462,
+    0.3102902923,
+    0.1551451462,
+    -0.6197185377,
+    0.2402991224,
+    0.0,
+    0.0
+};
+
+static float process_biquad(biquad_t* bq, float x)
+{
+    float output = (x * bq->b0) + bq->s1;
+    bq->s1 = (x * bq->b1) - (output * bq->a1) + bq->s2;
+    bq->s2 = (x * bq->b2) - (output * bq->a2);
+    return output;
+}
+
+void process_overdrive(overdrive_config_t* cfg, float* input, float* output)
+{
+    const float gain = cfg->gain;
+    const driving_functions_e f = cfg->driving_function;
+
+    for(uint32_t i = 0; i < cfg->sample_size; i++)
+    {
+        float x = input[i] * gain;
+        float y;
+        
+        switch(f)
+        {
+            case DRIVE_HARD:
+                if (x >= 1.0f) y = 1.0f;
+                else if (x <= -1.0f) y = -1.0f;
+                else y = x;
+                break;
+            case DRIVE_SOFT:
+                if (x >= 1.0f) y = 1.0f;
+                else if (x <= -1.0f) y = -1.0f;
+                else y = x - x*x*x * 0.333333f;
+                break;
+            default:
+                y = x;
+        }
+        output[i] = (y * bq.b0) + bq.s1;
+        bq.s1 = (y * bq.b1) - (output[i] * bq.a1) + bq.s2;
+        bq.s2 = (y * bq.b2) - (output[i] * bq.a2);
+    }
+}
