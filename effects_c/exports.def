@@ -1,0 +1,9 @@
+LIBRARY cext
+EXPORTS
+    eq_set_band
+    eq_process
+    eq_reset
+    eq_enable_band
+    eq_disable_band
+    process_bitcrusher
+    process_overdrive

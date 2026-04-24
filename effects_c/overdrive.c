@@ -9,7 +9,7 @@ typedef struct
     float s2;
 } biquad_t;
 
-static biquad_t bq =  // butter lp 8k @ 48kHz
+static biquad_t _bq =  // butter lp 8k @ 48kHz
 {
     0.1551451462f,
     0.3102902923f,
@@ -51,8 +51,8 @@ void process_overdrive(overdrive_config_t* cfg, float* input, float* output)
             default:
                 y = x;
         }
-        output[i] = (y * bq.b0) + bq.s1;
-        bq.s1 = (y * bq.b1) - (output[i] * bq.a1) + bq.s2;
-        bq.s2 = (y * bq.b2) - (output[i] * bq.a2);
+        output[i] = (y * _bq.b0) + _bq.s1;
+        _bq.s1 = (y * _bq.b1) - (output[i] * _bq.a1) + _bq.s2;
+        _bq.s2 = (y * _bq.b2) - (output[i] * _bq.a2);
     }
 }

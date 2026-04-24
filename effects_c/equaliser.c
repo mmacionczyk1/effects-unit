@@ -1,4 +1,5 @@
 #include "equaliser.h"
+#include <math.h>
 
 #ifndef PI
 #define PI 3.1415926535f
@@ -82,11 +83,8 @@ void eq_disable_band(equaliser_t* eq, uint32_t index)
 
 static void eq_update_coeffs(biquad_t* bq, eq_band_config_t* bcfg, uint32_t sample_rate)
 {
-    float A;
-    if (bcfg->type == EQ_FILTER_LOW_SHELF || bcfg->type == EQ_FILTER_HIGH_SHELF)
-        A = sqrtf(powf(10, bcfg->db_gain*0.025f));
-    else A = sqrtf(powf(10, bcfg->db_gain*0.05f));
-
+    float A = powf(10.0f, bcfg->db_gain/40.0f);
+    if (A < 0.0001f) A = 0.0001f;
     float w0 = 2.0f * PI * bcfg->f0 / sample_rate;
     float alpha = sinf(w0) * 0.5f / bcfg->Q;
     switch (bcfg->type)
@@ -120,7 +118,7 @@ static void eq_update_coeffs(biquad_t* bq, eq_band_config_t* bcfg, uint32_t samp
             bq->a1 = (-2.0f * cosf(w0)) * a0inv;
             bq->a2 = (1.0f - alpha/A) * a0inv;
             bq->b0 = (1.0f + alpha*A) * a0inv;
-            bq->b1 = -2.0f* cosf(w0) * a0inv;
+            bq->b1 = (-2.0f* cosf(w0)) * a0inv;
             bq->b2 = (1.0f - alpha*A) * a0inv;
             break;
         }

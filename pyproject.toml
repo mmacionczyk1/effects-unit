@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "effects_unit"
+version = "0.1.0"
+description = "Audio effects"
+dependencies = [
+    "numpy", "scipy",
+]
+
+[project.optional-dependencies]
+test = ["matplotlib"]
+
+[tool.setuptools.packages.find]
+include = ["effects*"]
+exclude = ["effects_c*"]
