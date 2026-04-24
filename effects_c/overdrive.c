@@ -1,21 +1,23 @@
 #include "overdrive.h"
+#include <math.h>
 
-typedef struct {
+typedef struct 
+{
     float b0, b1, b2;
     float a1, a2;
     float s1;
     float s2;
 } biquad_t;
 
-static biquad_t bq =  // butter lp 8k
+static biquad_t bq =  // butter lp 8k @ 48kHz
 {
-    0.1551451462,
-    0.3102902923,
-    0.1551451462,
-    -0.6197185377,
-    0.2402991224,
-    0.0,
-    0.0
+    0.1551451462f,
+    0.3102902923f,
+    0.1551451462f,
+    -0.6197185377f,
+    0.2402991224f,
+    0.0f,
+    0.0f
 };
 
 static float process_biquad(biquad_t* bq, float x)
@@ -39,14 +41,12 @@ void process_overdrive(overdrive_config_t* cfg, float* input, float* output)
         switch(f)
         {
             case DRIVE_HARD:
-                if (x >= 1.0f) y = 1.0f;
-                else if (x <= -1.0f) y = -1.0f;
-                else y = x;
+                x = fmaxf(-1.0f, fminf(1.0f, x));
+                y = x;
                 break;
             case DRIVE_SOFT:
-                if (x >= 1.0f) y = 1.0f;
-                else if (x <= -1.0f) y = -1.0f;
-                else y = x - x*x*x * 0.333333f;
+                x = fmaxf(-1.0f, fminf(1.0f, x));
+                y = x - x*x*x * 0.333333f;
                 break;
             default:
                 y = x;

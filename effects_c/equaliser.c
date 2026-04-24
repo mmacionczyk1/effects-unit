@@ -137,7 +137,7 @@ static void eq_update_coeffs(biquad_t* bq, eq_band_config_t* bcfg, uint32_t samp
         }
         case EQ_FILTER_HIGH_SHELF:
         {
-            float a0 = (A+1.0f) - (A-1.0f)*cosf(w0) - 2.0f*sqrtf(A)*alpha;
+            float a0 = (A+1.0f) - (A-1.0f)*cosf(w0) + 2.0f*sqrtf(A)*alpha;
             float a0inv = 1.0f/a0;
             bq->a1 = 2.0f*( (A-1.0f) - (A+1.0f)*cosf(w0)) * a0inv;
             bq->a2 = ((A+1.0f) - (A-1.0f)*cosf(w0) - 2.0f*sqrtf(A)*alpha) * a0inv;
