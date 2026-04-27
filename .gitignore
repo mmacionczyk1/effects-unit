@@ -11,6 +11,13 @@ __pycache__/
 *.dll
 *.exp
 
+
+.metadata/
+Debug/
+Release/
+*.log
+*.bak
+
 # Distribution / packaging
 .Python
 build/
