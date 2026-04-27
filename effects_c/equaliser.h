@@ -39,10 +39,11 @@ typedef struct
     uint32_t sample_rate;
     eq_band_config_t bands[EQ_MAX_BANDS];
     biquad_t biquads[EQ_MAX_BANDS];
+    uint32_t sample_size;
 } equaliser_t;
 
 void eq_reset(equaliser_t* eq);
-void eq_process(equaliser_t* eq, float* x, float* y, uint32_t sample_size);
+void eq_process(equaliser_t* eq, float* x, float* y);
 void eq_set_band(equaliser_t* eq, uint32_t index, eq_type_t type, float f0, float Q, float gain_db);
 void eq_enable_band(equaliser_t* eq, uint32_t index);
 void eq_disable_band(equaliser_t* eq, uint32_t index);

@@ -20,7 +20,8 @@ static biquad_t _bq =  // butter lp 8k @ 48kHz
     0.0f
 };
 
-static float process_biquad(biquad_t* bq, float x)
+
+static float __attribute__((unused)) process_biquad(biquad_t* bq, float x)
 {
     float output = (x * bq->b0) + bq->s1;
     bq->s1 = (x * bq->b1) - (output * bq->a1) + bq->s2;
@@ -28,7 +29,7 @@ static float process_biquad(biquad_t* bq, float x)
     return output;
 }
 
-void process_overdrive(overdrive_config_t* cfg, float* input, float* output)
+void overdrive_process(overdrive_config_t* cfg, float* input, float* output)
 {
     const float gain = cfg->gain;
     const driving_functions_e f = cfg->driving_function;

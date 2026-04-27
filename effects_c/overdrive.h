@@ -18,7 +18,7 @@ typedef struct
 
 
 
-void process_overdrive(overdrive_config_t* cfg, float* input, float* output);
+void overdrive_process(overdrive_config_t* cfg, float* input, float* output);
 
 
 

@@ -22,13 +22,14 @@ void process_bitcrusher(bitcrusher_config_t* cfg, float* input, float* output)
     const float inv_steps = 1.0f / (steps + 0.000001f);
     const float mix = cfg->mix_parameter;
     const float dither = cfg->dither_level;
+    const float coeff = 1.0f / 2147483648.0f;
 
     for (uint32_t i = 0; i < cfg->sample_size; i++)
     {
         if(cnt == 0)
         {
-            float n1 = (float)((int32_t)xorshift32(&cfg->rng_state)) * (1.0f / 2147483648.0f);
-            float n2 = (float)((int32_t)xorshift32(&cfg->rng_state)) * (1.0f / 2147483648.0f);
+            float n1 = (float)((int32_t)xorshift32(&cfg->rng_state)) * coeff;
+            float n2 = (float)((int32_t)xorshift32(&cfg->rng_state)) *  coeff;
             float x = input[i] * steps + (n1 + n2) * 0.5f  * dither;
             if (x >= 0.0f) x = (float)((int32_t)(x + 0.5f));
             else x = (float)((int32_t)(x - 0.5f));

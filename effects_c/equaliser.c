@@ -22,16 +22,18 @@ static void biquad_process(biquad_t* bq, float* x, float* y, uint32_t num)
         y[i] = output;
     }
 }
-void eq_process(equaliser_t* eq, float* x, float* y, uint32_t sample_size)
+
+void eq_process(equaliser_t* eq, float* x, float* y)
 {
     bool first_pass = true;
     bool any_active = false;
+    uint32_t size = eq->sample_size;
 
     for (uint32_t i = 0; i < EQ_MAX_BANDS; i++)
     {
         if (eq->bands[i].enabled)
         {
-            biquad_process(&eq->biquads[i], (first_pass ? x : y), y, sample_size);
+            biquad_process(&eq->biquads[i], (first_pass ? x : y), y, size);
             first_pass = false;
             any_active = true;
         }
@@ -39,7 +41,7 @@ void eq_process(equaliser_t* eq, float* x, float* y, uint32_t sample_size)
     
     if (!any_active && x != y)
     {
-        for (uint32_t i = 0; i < sample_size; i++) y[i] = x[i];
+        for (uint32_t i = 0; i < size; i++) y[i] = x[i];
     }
 }
 
