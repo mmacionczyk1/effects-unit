@@ -10,7 +10,7 @@
 #define EFFECT_CHAIN_MAX_SLOTS  8
 
 
-void audio_process_init(I2S_HandleTypeDef* hi2s);
+void audio_process_init(I2S_HandleTypeDef* hi2s, ADC_HandleTypeDef* hadc);
 void audio_pipeline(uint8_t half);
 
 bool effect_chain_add(audio_effect_func_t func, audio_set_size_func_t set_size, void* config);

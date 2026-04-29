@@ -37,15 +37,18 @@ void CS43L22_init(CS43L22_config_t *cfg, uint16_t *buffer, uint32_t len)
 	HAL_Delay(20);
 
 	CS43L22_write(ADDR_POWER_CTRL1, REG_POWER_OFF);
+	CS43L22_write(ADDR_POWER_CTRL2, 0xAF);
+
 	//CS43L22_write(ADDR_CLK_CTRL, CLK_AUTO_DETECT);
-	CS43L22_write(ADDR_CLK_CTRL, 0b10000001);
-	CS43L22_write(ADDR_INTERFACE_CTRL1, 0b00000111);
-	CS43L22_write(ADDR_PCMA, 0x00);
-	CS43L22_write(ADDR_PCMB, 0x00);
+	CS43L22_write(ADDR_CLK_CTRL, 0x81);
+	CS43L22_write(ADDR_INTERFACE_CTRL1, 0x04);
+
+	//CS43L22_write(ADDR_PCMA, 0x00);
+	//CS43L22_write(ADDR_PCMB, 0x00);
 	CS43L22_write(ADDR_POWER_CTRL1, REG_POWER_ON);
-	CS43L22_write(ADDR_PCMA, 0x00);
-	CS43L22_write(ADDR_PCMB, 0x00);
-	CS43L22_set_volume(50);
+	//CS43L22_write(ADDR_PCMA, 0x00);
+	//CS43L22_write(ADDR_PCMB, 0x00);
+	CS43L22_set_volume(70);
 
 }
 uint8_t CS43L22_read(uint8_t address)
@@ -61,7 +64,7 @@ void CS43L22_play()
 {
 	if (HAL_I2S_GetState(_cfg->hi2s) == HAL_I2S_STATE_READY)
 	{
-		HAL_I2S_Transmit_DMA(_cfg->hi2s, p_audio_buffer, 2*audio_buffer_len);
+		HAL_I2S_Transmit_DMA(_cfg->hi2s, p_audio_buffer, audio_buffer_len);
 		CS43L22_write(0x0E, 0x06);
 		CS43L22_write(ADDR_POWER_CTRL1, 0x9E);
 	}

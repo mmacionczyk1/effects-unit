@@ -15,8 +15,9 @@ typedef struct
 
 static effect_slot_t _chain[EFFECT_CHAIN_MAX_SLOTS];
 static uint8_t _chain_len = 0;
+static uint8_t _synced = 0;
 static I2S_HandleTypeDef* _hi2s = NULL;
-
+static ADC_HandleTypeDef* _hadc = NULL;
 
 static void run_effect_chain(float* in, float* out, uint16_t n)
 {
@@ -43,9 +44,10 @@ static void run_effect_chain(float* in, float* out, uint16_t n)
 }
 
 
-void audio_process_init(I2S_HandleTypeDef* hi2s)
+void audio_process_init(I2S_HandleTypeDef* hi2s, ADC_HandleTypeDef* hadc)
 {
     _hi2s = hi2s;
+    _hadc = hadc;
     effect_chain_clear();
 }
 
@@ -93,12 +95,21 @@ void effect_chain_set_enabled(uint8_t index, bool enabled)
 
 void HAL_I2S_TxHalfCpltCallback(I2S_HandleTypeDef* hi2s)
 {
-    if (hi2s == _hi2s)
-        audio_pipeline(0);
+    if (hi2s != _hi2s) return;
+
+    if (!_synced) 
+    {
+        HAL_ADC_Start_DMA(_hadc, (uint32_t*)get_u16_input_buffer(), AUDIO_BUF_LEN);
+        _synced = 1;
+        return;
+    }
+
+    audio_pipeline(0);
 }
 
 void HAL_I2S_TxCpltCallback(I2S_HandleTypeDef* hi2s)
 {
-    if (hi2s == _hi2s)
-        audio_pipeline(1);
+    if (hi2s != _hi2s) return;
+    if (!_synced) return;
+    audio_pipeline(1);
 }
