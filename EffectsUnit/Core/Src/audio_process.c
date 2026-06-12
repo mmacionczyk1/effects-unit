@@ -2,6 +2,8 @@
 #include "audio_buffers.h"
 #include <string.h>
 #include "stm32f4xx.h"
+#include "FreeRTOS.h"
+#include "task.h"
 
 typedef struct
 {
@@ -18,6 +20,8 @@ static uint8_t _chain_len = 0;
 static uint8_t _synced = 0;
 static I2S_HandleTypeDef* _hi2s = NULL;
 static ADC_HandleTypeDef* _hadc = NULL;
+static TaskHandle_t xDSPTaskHandle = NULL;
+
 
 static void run_effect_chain(float* in, float* out, uint16_t n)
 {
@@ -44,11 +48,31 @@ static void run_effect_chain(float* in, float* out, uint16_t n)
 }
 
 
+void vDSPTask(void *pvParameters)
+{
+    uint32_t ulNotificationValue;
+    //HAL_I2S_Transmit_DMA(_hi2s, (uint16_t*)get_i16_output_buffer(), AUDIO_TOTAL_BUF_STEREO_LEN);
+
+    for(;;)
+    {
+        ulNotificationValue = ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+
+        if (ulNotificationValue > 0)
+        {
+            static uint8_t next_half = 0;
+            audio_pipeline(next_half);
+            next_half = (next_half == 0) ? 1 : 0;
+        }
+    }
+}
+
+
 void audio_process_init(I2S_HandleTypeDef* hi2s, ADC_HandleTypeDef* hadc)
 {
     _hi2s = hi2s;
     _hadc = hadc;
     effect_chain_clear();
+    xTaskCreate(vDSPTask, "DSP", 512, NULL, configMAX_PRIORITIES - 1, &xDSPTaskHandle);
 }
 
 void audio_pipeline(uint8_t half)
@@ -97,19 +121,15 @@ void HAL_I2S_TxHalfCpltCallback(I2S_HandleTypeDef* hi2s)
 {
     if (hi2s != _hi2s) return;
 
-    if (!_synced) 
-    {
-        HAL_ADC_Start_DMA(_hadc, (uint32_t*)get_u16_input_buffer(), AUDIO_BUF_LEN);
-        _synced = 1;
-        return;
-    }
-
-    audio_pipeline(0);
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+	vTaskNotifyGiveFromISR(xDSPTaskHandle, &xHigherPriorityTaskWoken);
+	portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
 
 void HAL_I2S_TxCpltCallback(I2S_HandleTypeDef* hi2s)
 {
     if (hi2s != _hi2s) return;
-    if (!_synced) return;
-    audio_pipeline(1);
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+	vTaskNotifyGiveFromISR(xDSPTaskHandle, &xHigherPriorityTaskWoken);
+	portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
