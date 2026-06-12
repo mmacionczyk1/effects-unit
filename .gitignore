@@ -10,7 +10,7 @@ __pycache__/
 *.obj
 *.dll
 *.exp
-
+*.lib
 
 .metadata/
 Debug/
