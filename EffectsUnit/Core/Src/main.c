@@ -31,7 +31,9 @@
 #include "audio_process.h"
 #include "FreeRTOS.h"
 #include "task.h"
-
+#include "transport.h"
+#include "dispatcher.h"
+#include "led_controller.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -149,7 +151,7 @@ void test_chain_init(void)
 
     //HAL_ADC_Start_DMA(&hadc1, (uint32_t*)get_u16_input_buffer(), AUDIO_BUF_LEN);
 
-    CS43L22_play();
+    //CS43L22_play();
 }
 /* USER CODE END 0 */
 
@@ -194,9 +196,13 @@ int main(void)
   HAL_TIM_Base_Start(&htim14);
   HAL_TIM_PWM_Start(&htim14, TIM_CHANNEL_1);
   test_chain_init();
-  vTaskStartScheduler();
 
-  Error_Handler();
+  transport_init();
+  dispatcher_init();
+
+  register_led_controller_dispatch();
+  configASSERT(xTaskCreate(vTCP_ReceiveWorkerTask, "TCP_Rx", 3072, NULL, tskIDLE_PRIORITY + 2, NULL)== pdPASS);
+  configASSERT(xTaskCreate(vDispatcherTask, "Dispatch", 512, NULL, tskIDLE_PRIORITY + 2, NULL) == pdPASS);
 
   //HAL_ADC_Start_DMA(&hadc1, (uint32_t*)get_u16_input_buffer(), AUDIO_BUF_LEN);
   /* USER CODE END 2 */
@@ -219,7 +225,7 @@ int main(void)
 
   /* Create the thread(s) */
   /* definition and creation of defaultTask */
-  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 128);
+  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 512);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
@@ -619,23 +625,31 @@ static void MX_GPIO_Init(void)
   * @param  argument: Not used
   * @retval None
   */
+#define TCP_WORKER_STACK_WORDS  1024u
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void const * argument)
 {
   /* init code for LWIP */
   MX_LWIP_Init();
   /* USER CODE BEGIN 5 */
+  xTaskCreate(vTCP_ReceiveWorkerTask,
+                "tcp_rx",
+                TCP_WORKER_STACK_WORDS,
+                NULL,
+                tskIDLE_PRIORITY + 2,
+                NULL);
+
   /* Infinite loop */
   for(;;)
   {
-    osDelay(100);
+	  vTaskDelay(100);
   }
   /* USER CODE END 5 */
 }
 
 /**
   * @brief  Period elapsed callback in non blocking mode
-  * @note   This function is called  when TIM1 interrupt took place, inside
+  * @note   This function is called  when TIM6 interrupt took place, inside
   * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
   * a global variable "uwTick" used as application time base.
   * @param  htim : TIM handle
@@ -646,7 +660,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   /* USER CODE BEGIN Callback 0 */
 
   /* USER CODE END Callback 0 */
-  if (htim->Instance == TIM1)
+  if (htim->Instance == TIM6)
   {
     HAL_IncTick();
   }

@@ -4,6 +4,7 @@
 #include "stm32f4xx.h"
 #include "FreeRTOS.h"
 #include "task.h"
+#include "CS43L22.h"
 
 typedef struct
 {
@@ -25,7 +26,7 @@ static TaskHandle_t xDSPTaskHandle = NULL;
 
 static void run_effect_chain(float* in, float* out, uint16_t n)
 {
-	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_1, GPIO_PIN_SET);
+	//HAL_GPIO_WritePin(GPIOC, GPIO_PIN_1, GPIO_PIN_SET);
     bool any_active = false;
 
     for (uint8_t i = 0; i < _chain_len; i++)
@@ -44,7 +45,7 @@ static void run_effect_chain(float* in, float* out, uint16_t n)
 
     if (!any_active && in != out)
         memcpy(out, in, n * sizeof(float));
-    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_1, GPIO_PIN_RESET);
+    //HAL_GPIO_WritePin(GPIOC, GPIO_PIN_1, GPIO_PIN_RESET);
 }
 
 
@@ -52,7 +53,7 @@ void vDSPTask(void *pvParameters)
 {
     uint32_t ulNotificationValue;
     //HAL_I2S_Transmit_DMA(_hi2s, (uint16_t*)get_i16_output_buffer(), AUDIO_TOTAL_BUF_STEREO_LEN);
-
+    CS43L22_play();
     for(;;)
     {
         ulNotificationValue = ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
